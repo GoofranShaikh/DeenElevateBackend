@@ -1,0 +1,114 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model Customer {
+  customer_id  Int      @id @default(autoincrement())
+  first_name   String
+  last_name    String
+  email        String
+  phone_number String?
+  shipping_address String?
+  billing_address  String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  orders       Order[]
+  cart         Cart[]
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  customerId Int     @unique 
+  customer  Customer? @relation(fields: [customerId], references: [customer_id])
+
+  items     CartItem[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model CartItem {
+  id         Int      @id @default(autoincrement())
+  cartId     Int     
+  productId  Int     
+  quantity   Int
+  cart       Cart?     @relation(fields: [cartId], references: [id])
+  tshirt TShirt @relation(fields: [productId], references: [tshirt_id])
+}
+
+
+model Order {
+  order_id      Int       @id @default(autoincrement())
+  customer_id   Int
+  total_amount  Float
+  order_date    DateTime  @default(now())
+  status         Status   @relation(fields: [status_code], references: [status_code])
+  customer      Customer  @relation(fields: [customer_id], references: [customer_id])
+  order_items   Order_Item[]
+  status_code Int
+}
+
+model Status {
+  status_code Int    @id
+  status String  
+  orders    Order[]
+}
+
+model Order_Item {
+  order_item_id Int      @id @default(autoincrement())
+  order_id      Int
+  tshirt_id     Int
+  size_id       Int
+  quantity      Int
+  price         Float
+  order         Order    @relation(fields: [order_id], references: [order_id])
+  tshirt        TShirt   @relation(fields: [tshirt_id], references: [tshirt_id])
+  size          Size     @relation(fields: [size_id], references: [size_id])
+}
+
+model TShirt {
+  tshirt_id       Int        @id @default(autoincrement())
+  name            String
+  description     String?
+  price           Float
+  available_quantity Int
+  image_url       String?
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+  order_items     Order_Item[]
+  sizes           TShirt_Size[]
+  cartItems CartItem[]
+}
+
+model Size {
+  size_id      Int      @id @default(autoincrement())
+  size_name    String
+  tshirt_sizes TShirt_Size[]
+  order_items  Order_Item[]
+}
+
+// enum OrderStatus {
+//   Pending
+//   Processing
+//   Shipped
+//   Delivered
+//   Cancelled
+// }
+
+// Intermediate table for many-to-many relationship between TShirt and Size
+model TShirt_Size {
+  tshirt_id   Int
+  size_id     Int
+  tshirt      TShirt    @relation(fields: [tshirt_id], references: [tshirt_id])
+  size        Size      @relation(fields: [size_id], references: [size_id])
+
+  @@id([tshirt_id, size_id])
+}
+
