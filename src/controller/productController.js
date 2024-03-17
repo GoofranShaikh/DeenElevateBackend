@@ -110,14 +110,15 @@ const AddCart = async (req, res) => {
     let CartAvailable = await prisma.cart.findFirst({
       where: {
         customerId: req.body.customerId,
-      },
+      }
     })
     if (!CartAvailable) {
       // Create the Cart using create method
       const newCart = await prisma.cart.create({
         data: {
           customerId
-        }
+        },
+        // options: { timezone: 'Asia/Kolkata' },
       });
       addCartItem(req, res, newCart);
 
@@ -151,7 +152,7 @@ const GetCart = async (req, res) => {
     if(!IsCartAvailable){return res.status(400).json({message:'No content'}) }
     const cartItems = await prisma.cartItem.findMany({
       where: {
-        cartId: IsCartAvailable.cartId, // Replace with your desired cart ID
+        cartId: IsCartAvailable.id, // Replace with your desired cart ID
       },
       include: {
         tshirt: { // Include the 'tshirt' relation
