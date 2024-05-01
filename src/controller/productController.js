@@ -69,7 +69,43 @@ const saveProducts = async (req, res) => {
 
 const fetchAllProducts = async (req, res) => {
   try {
-    const products = await prisma.TShirt.findMany();
+  let itemPresnt;
+// Find the cartId associated with the customer
+if(req.body.customerId ){
+const cart = await prisma.Cart.findFirst({
+  where: {
+    customerId: req.body.customerId 
+  },
+});
+    if(cart){
+       itemPresnt=  {
+        where: {
+          cartId: cart.cartId
+        },
+        select: {
+          quantity: true // Select only the quantity field from cartItems
+        }
+      }
+    }
+    console.log(cart,'cart')
+  }
+    const products = await prisma.TShirt.findMany({
+      include: {
+        sizes: {
+          include: {
+            size: true, // Include the related Size record
+          },
+        },
+        cartItems: itemPresnt? itemPresnt:[]
+      },
+    });
+
+    // Map over the products array to transform each object
+    if(itemPresnt){
+    products.map(product => {
+  product.quantity = product.cartItems.length > 0 ? product.cartItems[0].quantity : 0;
+})
+  }
     res.status(200).json(products);
   }
   catch (error) {
@@ -95,8 +131,15 @@ const fetchProductByid = async (req, res) => {
             size: true, // Include the related Size record
           },
         },
+        cartItems: {
+          select: {
+            quantity: true // Select only the quantity field from cartItems
+          }
+        }
       },
+
     })
+    product.quantity = product.cartItems.length > 0 ? product.cartItems[0].quantity : 0;
     res.status(200).json(product);
   }
   catch (error) {
@@ -128,7 +171,7 @@ const AddCart = async (req, res) => {
         addCartItem(req, res, CartAvailable) //If user added new Product in Existing Cart
       }
       else {
-        updateCart(req, res) //If user updated Existing Product in Cart
+        updateCart(req, res, CartAvailable) //If user updated Existing Product in Cart
       }
     }
   }
@@ -183,41 +226,61 @@ async function addCartItem(req, res, newCart) {
   }
 }
 
-async function updateCart(req, res,) {
+async function updateCart(req, res, CartAvailable) {
 
   // Efficiently loop and update cart items within a transaction
   try {
-    const { cartId, cartItems } = req.body;
+    const { cartId, cartItems ,quantity, productId} = req.body;
     console.log(cartItems, 'cartItems')
-    await prisma.$transaction(async tx => {
-      for (const item of cartItems) {
-        console.log(item, 'cartItem')
 
-
-        // Update existing cart item
-        await tx.cartItem.updateMany({
-          where: {
-            AND: [
-              { productId: item.productId },
-              { id: item.id },
-            ]
-          },
-          data: {
-            quantity: item.quantity,
-          },
-        });
-
-      }
+    const existingRecord = await prisma.cartItem.findFirst({
+      where: {
+        cartId:cartId, // provide the ID of the record you want to update
+        productId:productId
+      },
     });
-    res.status(200).json({ cartId: cartId })
+
+    console.log(existingRecord,'existingRecord')
+if(existingRecord){
+    const updatedRecord = await prisma.cartItem.updateMany({
+      where: {
+        cartId:cartId, // provide the ID of the record you want to update
+        productId:productId
+      },
+      data: {
+        quantity: quantity,
+      },
+    });
+    console.log(updatedRecord,'updatedRecord')
+ 
+    return res.status(200).json({ cartId: cartId })
+  }
+  else{
+    addCartItem(req,res,CartAvailable);
+  }
   }
   catch (error) {
-    res.status(400).json({ message: error.message })
+    return res.status(400).json({ message: error.message })
   }
 
 }
 
 
+const deleteCart = async(req,res)=>{
+  try{
+    let deletedCartItem = await prisma.cartItem.delete({
+      where:{
+        id:req.body.id
+      }
+    })
+    res.status(200).json({deletedCartItem})
+  }
+  catch(error){
+    return res.status(400).json({ message: error.message })
+  }
+}
 
 
-module.exports = { saveProducts, fetchAllProducts, fetchProductByid, AddCart, GetCart };
+
+
+module.exports = { saveProducts, fetchAllProducts, fetchProductByid, AddCart, GetCart, deleteCart };

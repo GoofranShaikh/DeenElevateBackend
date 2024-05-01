@@ -2,9 +2,10 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const productValidator = require('../../src/validations/productValidation')
-// const dotenv = require('dotenv');
-// dotenv.config();
+const axios =require('axios');
+const dotenv = require('dotenv');
+dotenv.config();
+const PinCodeUrl=process.env.PINCODE_URL
 const sectrateKey = 'abcd1234'
 
 const transporter = nodemailer.createTransport({
@@ -121,6 +122,45 @@ async function sendVerificationEmail(email, otp,res) {
     }
 }
 
+const updateCustomer = async(req,res)=>{
+    try{
+        const updatedRecord = await prisma.customer.update({
+            where: { customer_id: req.body.customer_id }, // Provide the unique identifier
+            data: {
+                // Specify the fields you want to update and their new values
+                first_name: req.body.first_name,
+                last_name: req.body.last_name,
+                email:req.body.email,
+                phone_number:req.body.phone_number,
+                shipping_address:req.body.shipping_address,
+                billing_address:req.body.billing_address,
+                state: req.body.state,
+                city: req.body.city,
+                zipcode: req.body.zipcode
+
+                // Add more fields as needed
+            },
+        })
+        res.status(200).json({ updatedRecord ,message: 'Updated Successfully' })
+
+    } catch(error){
+        res.status(500).json({message:error})
+    }
+}
+
+const GetPinCode= async(req,res)=>{
+const PinCode=req.body.PinCode
+console.log(PinCodeUrl,'PinCodeUrl')
+axios.get(`${PinCodeUrl}${PinCode}`)
+  .then(response => {
+   res.status(200).json(response.data)
+  })
+  .catch(error => {
+    // Handle errors
+    res.status(400).json({error})
+  });
+}
+
 function timeConversion(time) {
     const utcString = time;
     const utcDateObj = new Date(utcString);
@@ -131,4 +171,5 @@ function timeConversion(time) {
     return differenceInMinutes < 5;
 }
 
-module.exports = { createUser, Login }
+
+module.exports = { createUser, Login ,updateCustomer, GetPinCode}

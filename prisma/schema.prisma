@@ -18,6 +18,9 @@ model Customer {
   phone_number String?
   shipping_address String?
   billing_address  String?
+  zipcode          Int?
+  state            String?
+  city             String?
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
   otp           Int?
@@ -83,6 +86,7 @@ model TShirt {
   image_url       String?
   created_at      DateTime   @default(now())
   updated_at      DateTime   @updatedAt
+  quantity        Int        @default(0)
   order_items     Order_Item[]
   sizes           TShirt_Size[]
   cartItems CartItem[]
