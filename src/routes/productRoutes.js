@@ -14,5 +14,6 @@ router.post('/auth/deleteCart',auth.AuthenticateRequest,ProductsController.delet
 router.post('/signup',UserController.createUser);
 router.post('/login', UserController.Login);
 router.post('/updateCustomer', UserController?.updateCustomer);
-router.post('/GetStates',UserController.GetPinCode)
+router.post('/GetStates',UserController.GetPinCode);
+router.post('/getAddressInfo',UserController.getAddressInfo)
 module.exports=router;

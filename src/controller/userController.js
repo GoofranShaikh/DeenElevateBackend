@@ -148,6 +148,26 @@ const updateCustomer = async(req,res)=>{
     }
 }
 
+const getAddressInfo = async(req,res)=>{
+    try{
+    if(req.body.customer_id){
+        const addressInfo = await prisma.customer.findFirst({
+            where:{
+                customer_id:req.body.customer_id
+            }
+        })
+        res.status(200).json({addressInfo});
+    }
+    else{
+        res.status(200).send([]);
+    }
+   
+} catch(error){
+    res.status(500).json({message:error});
+}
+
+}
+
 const GetPinCode= async(req,res)=>{
 const PinCode=req.body.PinCode
 console.log(PinCodeUrl,'PinCodeUrl')
@@ -172,4 +192,4 @@ function timeConversion(time) {
 }
 
 
-module.exports = { createUser, Login ,updateCustomer, GetPinCode}
+module.exports = { createUser, Login ,updateCustomer, GetPinCode, getAddressInfo}
