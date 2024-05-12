@@ -16,4 +16,5 @@ router.post('/login', UserController.Login);
 router.post('/updateCustomer', UserController?.updateCustomer);
 router.post('/GetStates',UserController.GetPinCode);
 router.post('/getAddressInfo',UserController.getAddressInfo)
+router.post('/auth/createOrder',ProductsController.checkout)
 module.exports=router;

@@ -1,10 +1,16 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const multer = require('multer');
-const productValidator = require('../../src/validations/productValidation')
-const CryptoJS = require('crypto-js');
+const productValidator = require('../../src/validations/productValidation');
+const Razorpay= require('razorpay');
+const dotenv = require('dotenv');
+dotenv.config();
+const razorpay =new Razorpay({
+  key_id: process.env.key_id,
+  key_secret:process.env.key_secret
+})
 
-const ENCRYPTION_KEY = '12345678'
+
 
 // Set up Multer storage for image uploads
 const storage = multer.diskStorage({
@@ -281,6 +287,28 @@ const deleteCart = async(req,res)=>{
 }
 
 
+const checkout = async(req,res)=>{
+  try{
+    const options = {
+        amount: req.body.amount, // amount in paisa (10 INR)
+        currency: 'INR',
+        receipt: 'order_1',
+        payment_capture: 1,
+      };
+    
+      razorpay.orders.create(options, (err, order) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json(order);
+      });
+}
+catch(e){
+    res.json({message:'Something went wrong'})
+}
+}
 
 
-module.exports = { saveProducts, fetchAllProducts, fetchProductByid, AddCart, GetCart, deleteCart };
+
+
+module.exports = { saveProducts, fetchAllProducts, fetchProductByid, AddCart, GetCart, deleteCart,checkout };
