@@ -4,6 +4,7 @@ const multer = require('multer');
 const productValidator = require('../../src/validations/productValidation');
 const Razorpay= require('razorpay');
 const dotenv = require('dotenv');
+const crypto = require('crypto');
 dotenv.config();
 const razorpay =new Razorpay({
   key_id: process.env.key_id,
@@ -308,7 +309,50 @@ catch(e){
 }
 }
 
+const checkoutInternal = async(req,res)=>{
+  try{
+
+    const CreateOrder = await prisma.$transaction(async(tx)=>{
+    const order = tx.Order.create({
+                          data:{
+                            customer_id:req.body.customer_id,
+                            total_amount:req.body.total_amount,
+                            status_code:req.body.status_code,
+                            order_items: {
+                              create: req.body.order_items
+                            }
+                          },
+                          include:{order_items:true}
+                        })
+                        return order
+    })
+    console.log(CreateOrder,'CreateOrder')
+    res.status(200).json(CreateOrder)
+  }
+  catch(error){
+    res.status(400).json((error.error))
+  }
+}
+
+
+const verifyPayment=async(req,res)=>{
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+  const generated_signature = crypto.createHmac('sha256', process.env.key_secret)
+                                    .update(razorpay_order_id + "|" + razorpay_payment_id)
+                                    .digest('hex');
+
+  if (generated_signature === razorpay_signature) {
+    razorpay.payments.fetch(razorpay_payment_id).then((paymentDocument) => {
+      res.send(paymentDocument);
+    }).catch((error) => {
+      res.status(500).send({ error });
+    });
+  } else {
+    res.status(400).send({ error: 'Invalid signature' });
+  }
+}
 
 
 
-module.exports = { saveProducts, fetchAllProducts, fetchProductByid, AddCart, GetCart, deleteCart,checkout };
+
+module.exports = { saveProducts, fetchAllProducts, fetchProductByid, AddCart, GetCart, deleteCart,checkout,verifyPayment,checkoutInternal };

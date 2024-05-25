@@ -56,6 +56,7 @@ model Order {
   status         Status   @relation(fields: [status_code], references: [status_code])
   customer      Customer  @relation(fields: [customer_id], references: [customer_id])
   order_items   Order_Item[]
+  Payment Payment[]
   status_code Int
 }
 
@@ -115,5 +116,26 @@ model TShirt_Size {
   size        Size      @relation(fields: [size_id], references: [size_id])
 
   @@id([tshirt_id, size_id])
+}
+
+model Payment {
+  amount Int
+  amount_refunded Int
+  caputred Boolean
+  card_id String?
+  contact String?
+  created_at DateTime @default(now())
+  Currency String 
+  payment_id String  @id 
+  international Boolean @default(false)
+  method String? @default("Offline")
+  rz_order_id String?
+  order_id Int
+  order Order  @relation(fields: [order_id], references: [order_id])
+  Status String @default("Pending")
+  tax Int?
+  wallet String? @default("Offline")
+
+
 }
 

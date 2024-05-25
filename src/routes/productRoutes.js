@@ -15,6 +15,8 @@ router.post('/signup',UserController.createUser);
 router.post('/login', UserController.Login);
 router.post('/updateCustomer', UserController?.updateCustomer);
 router.post('/GetStates',UserController.GetPinCode);
-router.post('/getAddressInfo',UserController.getAddressInfo)
-router.post('/auth/createOrder',ProductsController.checkout)
+router.post('/getAddressInfo',UserController.getAddressInfo);
+router.post('/auth/createOrder',ProductsController.checkout);
+router.post('/auth/createOrderInternal',ProductsController.checkoutInternal);
+router.post('/auth/verifyPayment', ProductsController.verifyPayment)
 module.exports=router;
