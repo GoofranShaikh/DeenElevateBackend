@@ -336,7 +336,7 @@ const checkoutInternal = async(req,res)=>{
 
 
 const verifyPayment=async(req,res)=>{
-  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature, internal_order_id } = req.body;
   const generated_signature = crypto.createHmac('sha256', process.env.key_secret)
                                     .update(razorpay_order_id + "|" + razorpay_payment_id)
                                     .digest('hex');
@@ -353,6 +353,39 @@ const verifyPayment=async(req,res)=>{
 }
 
 
+const savePayment= async(req,res)=>{
+  try{
+  const {payment_id,bank_transaction_id,rz_order_id,order_id,amount,amount_refunded,captured,card_id,contact,Currency,international,method,status,tax,wallet} = req.body;
+  const payment = await prisma.payment.create({
+    data: {
+      payment_id,
+      bank_transaction_id,
+      rz_order_id,
+      order_id,
+      amount,
+      amount_refunded,
+      captured,
+      card_id,
+      contact,
+      Currency,
+      international,
+      method,
+      status,
+      tax,
+      wallet
+    }
+  })
+  console.log(payment,'payment')
+  return res.status(200).json(payment)
+}
+catch(error){
+  console.log(error.message,'error');
+  return res.status(400).json(error.message)
+
+}
+}
 
 
-module.exports = { saveProducts, fetchAllProducts, fetchProductByid, AddCart, GetCart, deleteCart,checkout,verifyPayment,checkoutInternal };
+
+
+module.exports = { saveProducts, fetchAllProducts, fetchProductByid, AddCart, GetCart, deleteCart,checkout,verifyPayment,checkoutInternal ,savePayment};

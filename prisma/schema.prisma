@@ -119,22 +119,23 @@ model TShirt_Size {
 }
 
 model Payment {
+  bank_transaction_id String?
   amount Int
-  amount_refunded Int
-  caputred Boolean
+  amount_refunded Int? @default(0)
+  captured Boolean
   card_id String?
   contact String?
   created_at DateTime @default(now())
   Currency String 
   payment_id String  @id 
   international Boolean @default(false)
-  method String? @default("Offline")
+  method String? 
   rz_order_id String?
   order_id Int
   order Order  @relation(fields: [order_id], references: [order_id])
-  Status String @default("Pending")
+  status String
   tax Int?
-  wallet String? @default("Offline")
+  wallet String?
 
 
 }
